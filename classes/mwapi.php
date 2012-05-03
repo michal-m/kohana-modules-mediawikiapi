@@ -57,14 +57,17 @@ class MWAPI
         return MWAPI::$instances[$name];
     }
 
-    // Instance name
+    /**
+     * Instance name
+     * @var string
+     */
     protected $_instance;
 
-    // Configuration array
+    /**
+     * Configuration array
+     * @var string
+     */
     protected $_config;
-
-    // MediaWikiAPI url
-    protected $_url;
 
     /**
      * Stores the api configuration locally and name the instance.
@@ -81,8 +84,8 @@ class MWAPI
         // Store the config locally
         $this->_config = $config;
 
-        // Store the URL locally
-        $this->_url = $config['url'];
+        // Build api URL
+        $this->_config['url'] = ($config['secure']) ? 'https://' : 'http://' . $config['domain'] . '/' . $config['path'];
 
         // Store the MWAPI instance
         MWAPI::$instances[$name] = $this;
@@ -91,7 +94,7 @@ class MWAPI
     /**
      * Returns the MWAPI instance name.
      *
-     *     echo (string) $db;
+     *     echo (string) $mwapi;
      *
      * @return  string
      */
@@ -105,11 +108,78 @@ class MWAPI
      *
      * @param   string  $username
      * @param   string  $password
-     * @param   array   $config
+     * @param   array   $params Extra params to be passed in the second request
      * @return  boolean Returns boolean true on success or false otherwise
      */
-    public function login($username, $password, array $config = NULL)
+    public function login($username, $password, array $params = NULL)
     {
-        return FALSE;
+        // Perform the first, handshake request
+        $request_1 = MWAPI_RequestBuilder::instance($this->_config['url'], 'login')
+                ->method(Request::POST)
+                ->param('lgname', $username)
+                ->build();
+        $response_1 = $request_1->execute();
+
+        if ($response_1->status() >= 300)
+        {
+            // throw new HTTP_Exception_500('Unsuccessful response from API: :status', array(':status' => $response_1->status()));
+            return FALSE;
+        }
+
+        $response_1_data = json_decode($response_1->body());
+
+        if ($response_1_data->login->result != 'NeedToken')
+        {
+            // throw new HTTP_Exception_500('Unexpected response from API: :result', array(':result' => $response_1_data->login->result));
+            return FALSE;
+        }
+
+        $cookie_prefix = $response_1_data->login->cookieprefix;
+        $cookies = array(
+            $cookie_prefix . '_session' => $response_1_data->login->sessionid,
+        );
+
+        // Perform the second, login request
+        $rb_2 = MWAPI_RequestBuilder::instance($this->_config['url'], 'login')
+                ->method(Request::POST)
+                ->param('lgname', $username)
+                ->param('lgpassword', $password)
+                ->param('lgtoken', $response_1_data->login->token);
+
+        if (is_array($params))
+        {
+            foreach ($params as $key => $value)
+            {
+                $rb_2->param($key, $value);
+            }
+        }
+
+        $request_2 = $rb_2
+                ->build()
+                ->headers('Cookie', MWAPI_Cookie::build_cookie_header($cookies));
+        $response_2 = $request_2->execute();
+
+        if ($response_2->status() >= 300)
+        {
+            // throw new HTTP_Exception_500('Unsuccessful response from API: :status', array(':status' => $response_2->status()));
+            return FALSE;
+        }
+
+        $response_2_data = json_decode($response_2->body());
+        $wiki_cookies = MWAPI_Cookie::parse_cookie($response_2->headers('set-cookie'));
+
+        if ($response_2_data->login->result != 'Success')
+        {
+            // throw new HTTP_Exception_500('Unexpected response from API: :result', array(':result' => $response_2_data->login->result));
+            return FALSE;
+        }
+
+        // Send the Wiki Session cookies back to the client
+        foreach ($wiki_cookies as $wiki_cookie)
+        {
+            setcookie($wiki_cookie['name'], $wiki_cookie['value'], $wiki_cookie['expires'], $wiki_cookie['path'], $this->_config['cookie-domain'], $this->_config['secure'], $wiki_cookie['httponly']);
+        }
+
+        return TRUE;
     }
 }
