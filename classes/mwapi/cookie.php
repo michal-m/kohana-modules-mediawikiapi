@@ -1,14 +1,13 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-
 /**
  * The MWAPI_RequestBuilder class
  *
  * @package     MediaWikiAPI
  * @author      Michał Musiał
- * @copyright   (c) 2012 Michał Musiał
+ * @copyright   (c) 2013 Michał Musiał
  */
-class MWAPI_Cookie
-{
+class MWAPI_Cookie {
+
     /**
      * Builds a Cookie header string based on values provided in $cookies param.
      * Values are automatically urlencode'd.

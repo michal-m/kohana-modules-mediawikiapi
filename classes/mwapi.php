@@ -1,14 +1,13 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-
 /**
  * The MWAPI class
  *
  * @package     MediaWikiAPI
  * @author      Michał Musiał
- * @copyright   (c) 2012 Michał Musiał
+ * @copyright   (c) 2013 Michał Musiał
  */
-class MWAPI
-{
+class MWAPI {
+
     /**
      * @var  string  default instance name
      */
@@ -121,18 +120,14 @@ class MWAPI
         $response_1 = $request_1->execute();
 
         if ($response_1->status() >= 300)
-        {
             // throw new HTTP_Exception_500('Unsuccessful response from API: :status', array(':status' => $response_1->status()));
             return FALSE;
-        }
 
         $response_1_data = json_decode($response_1->body());
 
         if ($response_1_data->login->result != 'NeedToken')
-        {
             // throw new HTTP_Exception_500('Unexpected response from API: :result', array(':result' => $response_1_data->login->result));
             return FALSE;
-        }
 
         $cookie_prefix = $response_1_data->login->cookieprefix;
         $cookies = array(
@@ -160,19 +155,15 @@ class MWAPI
         $response_2 = $request_2->execute();
 
         if ($response_2->status() >= 300)
-        {
             // throw new HTTP_Exception_500('Unsuccessful response from API: :status', array(':status' => $response_2->status()));
             return FALSE;
-        }
 
         $response_2_data = json_decode($response_2->body());
         $wiki_cookies = MWAPI_Cookie::parse_cookie($response_2->headers('set-cookie'));
 
         if ($response_2_data->login->result != 'Success')
-        {
             // throw new HTTP_Exception_500('Unexpected response from API: :result', array(':result' => $response_2_data->login->result));
             return FALSE;
-        }
 
         // Send the Wiki Session cookies back to the client
         foreach ($wiki_cookies as $wiki_cookie)

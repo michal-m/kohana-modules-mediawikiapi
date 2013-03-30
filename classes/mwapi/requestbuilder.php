@@ -1,14 +1,13 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-
 /**
  * The MWAPI_RequestBuilder class
  *
  * @package     MediaWikiAPI
  * @author      Michał Musiał
- * @copyright   (c) 2012 Michał Musiał
+ * @copyright   (c) 2013 Michał Musiał
  */
-class MWAPI_RequestBuilder
-{
+class MWAPI_RequestBuilder {
+
     /**
      * Get a singleton MWAPI_RequestBuilder instance.
      *
@@ -31,20 +30,20 @@ class MWAPI_RequestBuilder
         return new MWAPI_RequestBuilder($url, $action, $format);
     }
 
-	/**
-	 * @var  string  The HTTP request method
-	 */
-	protected $_method = Request::GET;
+    /**
+     * @var  string  The HTTP request method
+     */
+    protected $_method = Request::GET;
 
-	/**
-	 * @var  string  the URL of the request
-	 */
-	protected $_url;
+    /**
+     * @var  string  the URL of the request
+     */
+    protected $_url;
 
-	/**
-	 * @var  array   parameters from the route
-	 */
-	protected $_params = array();
+    /**
+     * @var  array   parameters from the route
+     */
+    protected $_params = array();
 
     /**
      * @return  void
@@ -91,10 +90,8 @@ class MWAPI_RequestBuilder
     public function method($method = NULL)
     {
         if ($method === NULL)
-        {
             // Act as a getter
             return $this->_method;
-        }
 
         // Act as a setter
         $this->_method = strtoupper($method);
@@ -113,10 +110,8 @@ class MWAPI_RequestBuilder
     public function param($key = NULL, $value = NULL, $default = NULL)
     {
         if ($key === NULL)
-        {
             // Return the full array
             return $this->_params;
-        }
 
         if ($value !== NULL)
         {
